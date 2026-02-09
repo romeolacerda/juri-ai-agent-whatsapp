@@ -82,9 +82,6 @@ def clientes(request):
         return redirect('clientes')
     
 def cliente(request, id):
-    agente = JuriAI.build_agent()
-    x = agente.print_response('Ola como vai')
-    print(x)
     cliente = Cliente.objects.get(id=id)
     if request.method == 'GET':
         documentos = Documentos.objects.filter(cliente=cliente)
