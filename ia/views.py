@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 from django.views.decorators.csrf import csrf_exempt
 from ia.agente_langchain import JurisprudenciaAI
-from ia.agents import JuriAI
+from ia.agents import JuriAI, SecretariaAI
 from ia.models import AnaliseJurisprudencia, ContextRag, Pergunta
 from usuarios.models import Cliente, Documentos
 from django.shortcuts import get_object_or_404
@@ -16,6 +16,8 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.messages import constants
 import time
+import json
+from agno.agent import RunOutput
 
 @csrf_exempt
 def chat(request, id):
@@ -120,3 +122,15 @@ def processar_analise(request, id):
     except Exception as e:
         messages.add_message(request, constants.ERROR, f'Erro ao processar análise: {str(e)}')
         return redirect('analise_jurisprudencia', id=id)
+
+@csrf_exempt
+def webhook_whatsapp(request):
+    data = json.loads(request.body)
+    phone = data.get('data').get('key').get('remoteJid').split('@')[0]
+    message = data.get('data').get('message').get('extendedTextMessage').get('text')
+
+    agent = SecretariaAI.build_agent(session_id=phone)
+    response: RunOutput = agent.run(message)
+    print(response.content)
+    return JsonResponse({'response': response.content})
+    #send_message = SendMessage().send_message('arcane3', {"number": phone, "textMessage": {"text": response}})
